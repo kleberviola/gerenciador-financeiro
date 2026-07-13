@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const xlsx = require('xlsx');
 
 const app = express();
@@ -13,8 +14,9 @@ app.use(express.json());
 const CONTAS_URL = "https://docs.google.com/spreadsheets/d/1WbTHAhdBN5PkyAkZUm6R8p8PxuDZ8V2VtGiCyUpR3RU/export?format=xlsx";
 const CARTOES_URL = "https://docs.google.com/spreadsheets/d/1eLn_SZzyLPhg5dA5Ui58AxwTiyB4b9fGYkmbTq-yAds/export?format=xlsx";
 
-const CONTAS_PATH = path.join(__dirname, 'contas_2026.xlsx');
-const CARTOES_PATH = path.join(__dirname, 'cartoes_2026.xlsx');
+// Usando o diretório temporário do SO para evitar erros de escrita em ambientes Serverless (como Vercel)
+const CONTAS_PATH = path.join(os.tmpdir(), 'contas_2026.xlsx');
+const CARTOES_PATH = path.join(os.tmpdir(), 'cartoes_2026.xlsx');
 
 // Função auxiliar para download
 async function downloadFile(url, destPath) {
@@ -335,14 +337,20 @@ app.get('/api/financial-data', async (req, res) => {
   }
 });
 
-// Servir frontend compilado em produção
-if (fs.existsSync(path.join(__dirname, 'dist'))) {
-  app.use(express.static(path.join(__dirname, 'dist')));
+// Servir frontend compilado em produção (para compatibilidade local com node api/index.js)
+const distPath = path.join(__dirname, '..', 'dist');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
   app.use((req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    res.sendFile(path.join(distPath, 'index.html'));
   });
 }
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
+// Inicia servidor apenas se rodando fora da Vercel (onde é Serverless)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+  });
+}
+
+module.exports = app;

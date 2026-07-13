@@ -5,12 +5,12 @@
   "type": "module",
   "scripts": {
     "dev:frontend": "vite",
-    "dev:backend": "node server.cjs",
+    "dev:backend": "node api/index.js",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "start": "node server.cjs"
+    "start": "node api/index.js"
   },
   "dependencies": {
     "cors": "^2.8.6",
