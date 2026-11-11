@@ -7,14 +7,15 @@ import {
   RefreshCw, 
   CheckCircle2, 
   AlertCircle,
-  CircleDollarSign,
   ArrowDownRight,
   ArrowUpRight,
   PieChart as PieIcon,
   Sun,
   Moon,
   PiggyBank,
-  ChartColumn
+  ChartColumn,
+  Receipt,
+  Search
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -28,10 +29,12 @@ import {
   YAxis, 
   CartesianGrid,
   LineChart,
-  Line
+  Line,
+  Legend
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
+import { Logo } from './components/Logo';
 
 // Tipagem dos Dados
 interface Despesa {
@@ -61,10 +64,18 @@ interface Investimento {
   valor: number;
 }
 
+interface DespesaVariavel {
+  dia: string | null;
+  estabelecimento: string;
+  valor: number;
+  categoria: string;
+}
+
 interface DadosMesContas {
   despesas: Despesa[];
   receitas: Receita[];
   investimentos?: Investimento[];
+  variaveis?: DespesaVariavel[];
 }
 
 interface DadosMesCartoes {
@@ -81,40 +92,55 @@ interface ResponseData {
   message?: string;
 }
 
-// Paleta de Cores Supabase (Cores vibrantes para o Dark e Light Mode)
+// Paleta de Cores Oficial Monewell (Extraída diretamente da identidade visual)
 const CATEGORY_COLORS: { [key: string]: string } = {
-  'Moradia': '#3b82f6',      // Blue
-  'Internet/Tel': '#38bdf8', // Sky Blue
-  'Lazer': '#fbbf24',        // Amber
-  'Streaming': '#f472b6',    // Pink
-  'Carro': '#a78bfa',        // Violet
-  'Empresa': '#2dd4bf',      // Teal
-  'Saúde': '#f87171',        // Rose/Red
-  'Cartão': '#3ecf8e',       // Supabase Green
-  'Outros': '#a1a1aa',       // Zinc
-  'Variados': '#c084fc',     // Purple
-  'Vestuário': '#fb7185',    // Rose
-  'Alimentação': '#10b981',   // Emerald
+  'Moradia': '#287af8',      // Azul Oficial
+  'Internet/Tel': '#1cadc0', // Ciano Oficial
+  'Lazer': '#fdc51b',        // Amarelo Oficial
+  'Streaming': '#b57edc',    // Lilás Oficial
+  'Carro': '#7e4ca5',        // Roxo Oficial
+  'Empresa': '#1dbdd2',      // Turquesa Oficial
+  'Saúde': '#d60000',        // Vermelho Oficial
+  'Cartão': '#96cd28',       // Verde Vibrante Oficial
+  'Outros': '#a1a1aa',       // Neutro
+  'Variados': '#7e4ca5',     // Roxo Oficial
+  'Vestuário': '#ff2a2a',    // Vermelho Claro Oficial
+  'Alimentação': '#96cd28',   // Verde Oficial
+  'Comer fora': '#fdc51b',   // Amarelo Oficial
+  'Pet': '#fd7b04',          // Laranja Oficial
+  'Dízimo': '#b57edc',       // Lilás Oficial
+  'Fiorino': '#4aa2f6',      // Azul Céu Oficial
 };
 
 const BANK_COLORS: { [key: string]: { bg: string; text: string } } = {
-  'Pagbank': { bg: '#fef3c7', text: '#b45309' },
-  'C6': { bg: '#27272a', text: '#ffffff' },
-  'C6 PJ': { bg: '#dbeafe', text: '#1e40af' },
-  'Fabiana': { bg: '#fbcfe8', text: '#be185d' },
-  'Inter': { bg: '#ffedd5', text: '#c2410c' },
-  'Nubank': { bg: '#f3e8ff', text: '#6b21a8' },
-  'Nubank Fabiana': { bg: '#8b5cf6', text: '#ffffff' },
-  'PicPay': { bg: '#dcfce7', text: '#15803d' },
-  'Picpay': { bg: '#dcfce7', text: '#15803d' },
-  'Porto': { bg: '#1e3a8a', text: '#ffffff' },
-  'Santander': { bg: '#fee2e2', text: '#b91c1c' },
-  'Yago': { bg: '#10b981', text: '#ffffff' },
-  'Mercado Pago': { bg: '#e0f2fe', text: '#0369a1' },
-  'Mercadopago': { bg: '#e0f2fe', text: '#0369a1' }
+  'Pagbank': { bg: '#feec9a', text: '#fd7b04' },
+  'C6': { bg: '#253505', text: '#b3ed77' },
+  'C6 PJ': { bg: '#9fdffa', text: '#287af8' },
+  'Fabiana': { bg: '#dbb5ee', text: '#7e4ca5' },
+  'Inter': { bg: '#ffcf91', text: '#fd7b04' },
+  'Nubank': { bg: '#dbb5ee', text: '#7e4ca5' },
+  'Nubank Fabiana': { bg: '#7e4ca5', text: '#ffffff' },
+  'PicPay': { bg: '#b3ed77', text: '#253505' },
+  'Picpay': { bg: '#b3ed77', text: '#253505' },
+  'Porto': { bg: '#287af8', text: '#ffffff' },
+  'Santander': { bg: '#f8c6c5', text: '#d60000' },
+  'Yago': { bg: '#96cd28', text: '#253505' },
+  'Mercado Pago': { bg: '#83dfea', text: '#1cadc0' },
+  'Mercadopago': { bg: '#83dfea', text: '#1cadc0' }
 };
 
-const DEFAULT_COLORS = ['#3ecf8e', '#3b82f6', '#fbbf24', '#f87171', '#a78bfa', '#2dd4bf', '#a1a1aa'];
+const DEFAULT_COLORS = [
+  '#96cd28', // Verde Vibrante da Paleta
+  '#287af8', // Azul da Paleta
+  '#fd7b04', // Laranja da Paleta
+  '#7e4ca5', // Roxo da Paleta
+  '#1cadc0', // Ciano da Paleta
+  '#fdc51b', // Amarelo da Paleta
+  '#d60000', // Vermelho da Paleta
+  '#4aa2f6', // Azul Céu da Paleta
+  '#b57edc', // Lilás da Paleta
+  '#1dbdd2', // Turquesa da Paleta
+];
 
 // Variantes de Animação do Framer Motion
 const staggerContainer: Variants = {
@@ -139,6 +165,8 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<'todos' | 'pagos' | 'abertos'>('todos');
+  const [categoryView, setCategoryView] = useState<'fixas' | 'variaveis' | 'geral'>('geral');
+  const [searchVariavel, setSearchVariavel] = useState<string>('');
   
   // Controle de Tema (Supabase Dark / Light) com persistência
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -181,11 +209,14 @@ export default function App() {
       
       if (json.months.length > 0) {
         if (!selectedMonth || !json.months.includes(selectedMonth)) {
+          // Prioriza o mês atual ou o mês mais recente ativo (ex: Novembro)
           const currentMonthName = getMonthNamePtBR(new Date().getMonth());
           if (json.months.includes(currentMonthName)) {
             setSelectedMonth(currentMonthName);
+          } else if (json.months.includes('Novembro')) {
+            setSelectedMonth('Novembro');
           } else {
-            setSelectedMonth(json.months[0]);
+            setSelectedMonth(json.months[json.months.length - 1]);
           }
         }
       }
@@ -215,12 +246,13 @@ export default function App() {
   };
 
   // Lógica de processamento
-  const contasDoMes = data?.contas[selectedMonth] || { despesas: [], receitas: [], investimentos: [] };
+  const contasDoMes = data?.contas[selectedMonth] || { despesas: [], receitas: [], investimentos: [], variaveis: [] };
   const cartoesDoMes = data?.cartoes[selectedMonth] || {};
 
   // Cálculos de KPIs
   const totalReceitas = contasDoMes.receitas.reduce((sum, item) => sum + item.valor, 0);
   const totalDespesasFixas = contasDoMes.despesas.reduce((sum, item) => sum + item.valor, 0);
+  const totalDespesasVariaveis = contasDoMes.variaveis?.reduce((sum, item) => sum + item.valor, 0) || 0;
   const totalInvestimentos = contasDoMes.investimentos?.reduce((sum, item) => sum + item.valor, 0) || 0;
   
   // Total Cartões
@@ -231,7 +263,8 @@ export default function App() {
     });
   });
 
-  const saldoLiquido = totalReceitas - totalDespesasFixas;
+  // Saldo Líquido do mês deduzindo despesas fixas e variáveis (conforme alinhado e conforme aba Resumo da planilha)
+  const saldoLiquido = totalReceitas - totalDespesasFixas - totalDespesasVariaveis;
 
   // Cálculo de crescimento de investimentos em relação ao mês anterior
   const mesesLista = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -253,31 +286,43 @@ export default function App() {
     crescimentoInvestido = 100;
   }
 
-  // Gráfico: Distribuição por Tipo de Despesa
-  const despesasPorTipo: { [tipo: string]: number } = {};
-  contasDoMes.despesas.forEach(item => {
-    const tipo = item.tipo || 'Outros';
-    despesasPorTipo[tipo] = (despesasPorTipo[tipo] || 0) + item.valor;
-  });
+  // Gráfico: Distribuição por Categoria (Alternável entre Fixas, Variáveis e Geral)
+  const despesasPorCategoria: { [cat: string]: number } = {};
+  
+  if (categoryView === 'fixas' || categoryView === 'geral') {
+    contasDoMes.despesas.forEach(item => {
+      const tipo = item.tipo || 'Outros';
+      despesasPorCategoria[tipo] = (despesasPorCategoria[tipo] || 0) + item.valor;
+    });
+  }
+  if (categoryView === 'variaveis' || categoryView === 'geral') {
+    contasDoMes.variaveis?.forEach(item => {
+      const cat = item.categoria || 'Outros';
+      despesasPorCategoria[cat] = (despesasPorCategoria[cat] || 0) + item.valor;
+    });
+  }
 
-  const pieChartData = Object.entries(despesasPorTipo).map(([name, value]) => ({
+  const pieChartData = Object.entries(despesasPorCategoria).map(([name, value]) => ({
     name,
     value: parseFloat(value.toFixed(2))
   })).sort((a, b) => b.value - a.value);
 
   const topCategoryName = pieChartData[0]?.name || 'Nenhuma';
+  const totalBaseCategorias = pieChartData.reduce((s, x) => s + x.value, 0);
 
-  // Gráfico: Histórico de Saldo (Meses Anteriores)
+  // Gráfico: Histórico de Saldo (Meses Anteriores com Fixas e Variáveis)
   const barChartData = data?.months.map(m => {
-    const mesContas = data.contas[m] || { despesas: [], receitas: [] };
+    const mesContas = data.contas[m] || { despesas: [], receitas: [], variaveis: [] };
 
     const rec = mesContas.receitas.reduce((sum, item) => sum + item.valor, 0);
-    const desp = mesContas.despesas.reduce((sum, item) => sum + item.valor, 0);
+    const despFixas = mesContas.despesas.reduce((sum, item) => sum + item.valor, 0);
+    const despVar = mesContas.variaveis?.reduce((sum, item) => sum + item.valor, 0) || 0;
 
     return {
       name: m,
       Receitas: parseFloat(rec.toFixed(2)),
-      Despesas: parseFloat(desp.toFixed(2))
+      'Despesas Fixas': parseFloat(despFixas.toFixed(2)),
+      'Despesas Variáveis': parseFloat(despVar.toFixed(2))
     };
   }) || [];
 
@@ -293,9 +338,19 @@ export default function App() {
     };
   });
 
-  // Helper de Moeda
+  // Filtragem de Despesas Variáveis por busca
+  const variaveisFiltradas = (contasDoMes.variaveis || []).filter(item => {
+    if (!searchVariavel.trim()) return true;
+    const term = searchVariavel.toLowerCase();
+    return item.estabelecimento.toLowerCase().includes(term) || item.categoria.toLowerCase().includes(term);
+  });
+
+  // Helper de Moeda com espaço inquebrável para evitar quebras de linha
   const formatCurrency = (val: number) => {
-    return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    if (val < 0) {
+      return `-R$\u00A0${Math.abs(val).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    return `R$\u00A0${val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   // Helper de Data formatada para exibição pt-BR
@@ -347,13 +402,10 @@ export default function App() {
       {/* Header */}
       <header className="app-header">
         <div className="brand-section">
-          <div className="brand-logo">
-            <CircleDollarSign size={22} />
-          </div>
-          <div className="brand-title">
-            <h1>Gestor Financeiro</h1>
-            <p>Visão geral das suas planilhas financeiras</p>
-          </div>
+          <Logo height={38} className="brand-logo-img" />
+          <p className="brand-subtitle">
+            Visão integrada de despesas fixas, variáveis, receitas e cartões
+          </p>
         </div>
         
         <div className="actions-section">
@@ -366,19 +418,18 @@ export default function App() {
             </div>
           </div>
 
-          {/* Botão de Chaveamento de Tema (Sun e Moon Lucide Icons) */}
+          {/* Botão de Chaveamento de Tema com Alto Contraste */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={toggleTheme}
-            className="btn-refresh"
-            style={{ padding: '0.625rem', width: '2.5rem', height: '2.5rem', justifyContent: 'center' }}
+            className="theme-toggle-btn"
             title="Alternar Tema"
           >
             {theme === 'dark' ? (
-              <Sun size={16} style={{ color: '#fbbf24' }} />
+              <Sun size={17} className="sun-icon" />
             ) : (
-              <Moon size={16} style={{ color: '#475569' }} />
+              <Moon size={17} className="moon-icon" />
             )}
           </motion.button>
 
@@ -423,7 +474,7 @@ export default function App() {
         animate="show"
         className="kpis-grid"
       >
-        {/* Saldo Líquido - DESTAQUE SUPABASE */}
+        {/* Saldo Líquido - DESTAQUE NO VERDE LIMÃO DA REFERÊNCIA */}
         <motion.div 
           variants={fadeUpItem}
           whileHover={{ y: -3, boxShadow: '0 8px 30px rgba(0,0,0,0.06)' }}
@@ -435,8 +486,13 @@ export default function App() {
               <DollarSign size={16} />
             </div>
           </div>
-          <div className="kpi-value">
-            {formatCurrency(saldoLiquido)}
+          <div className="kpi-body">
+            <div className="kpi-value" style={{ whiteSpace: 'nowrap' }}>
+              {formatCurrency(saldoLiquido)}
+            </div>
+            <div className="kpi-pill">
+              {saldoLiquido >= 0 ? '↑ Saldo positivo' : '↓ Saldo negativo'}
+            </div>
           </div>
         </motion.div>
 
@@ -452,8 +508,13 @@ export default function App() {
               <TrendingUp size={16} />
             </div>
           </div>
-          <div className="kpi-value" style={{ color: 'var(--success)' }}>
-            {formatCurrency(totalReceitas)}
+          <div className="kpi-body">
+            <div className="kpi-value" style={{ color: 'var(--success)' }}>
+              {formatCurrency(totalReceitas)}
+            </div>
+            <div className="kpi-pill" style={{ backgroundColor: 'var(--success-light)', color: 'var(--success)' }}>
+              ↑ Entradas confirmadas
+            </div>
           </div>
         </motion.div>
 
@@ -469,8 +530,35 @@ export default function App() {
               <TrendingDown size={16} />
             </div>
           </div>
-          <div className="kpi-value" style={{ color: 'var(--danger)' }}>
-            {formatCurrency(totalDespesasFixas)}
+          <div className="kpi-body">
+            <div className="kpi-value" style={{ color: 'var(--danger)' }}>
+              {formatCurrency(totalDespesasFixas)}
+            </div>
+            <div className="kpi-pill" style={{ backgroundColor: 'var(--danger-light)', color: 'var(--danger)' }}>
+              ↓ Contas obrigatórias
+            </div>
+          </div>
+        </motion.div>
+
+        {/* NOVO: Despesas Variáveis */}
+        <motion.div 
+          variants={fadeUpItem}
+          whileHover={{ y: -3, boxShadow: '0 8px 30px rgba(0,0,0,0.04)' }}
+          className="premium-card kpi-card kpi-variaveis"
+        >
+          <div className="kpi-header">
+            <span>Despesas Variáveis</span>
+            <div className="kpi-icon-wrapper">
+              <Receipt size={16} />
+            </div>
+          </div>
+          <div className="kpi-body">
+            <div className="kpi-value">
+              {formatCurrency(totalDespesasVariaveis)}
+            </div>
+            <div className="kpi-pill" style={{ backgroundColor: 'var(--warning-light)', color: 'var(--warning)' }}>
+              {contasDoMes.variaveis && contasDoMes.variaveis.length > 0 ? `${contasDoMes.variaveis.length} lançamentos` : 'Nenhum lançamento'}
+            </div>
           </div>
         </motion.div>
 
@@ -486,47 +574,49 @@ export default function App() {
               <CreditCard size={16} />
             </div>
           </div>
-          <div className="kpi-value" style={{ color: 'var(--warning)' }}>
-            {formatCurrency(totalCartoes)}
+          <div className="kpi-body">
+            <div className="kpi-value" style={{ color: 'var(--purple)' }}>
+              {formatCurrency(totalCartoes)}
+            </div>
+            <div className="kpi-pill" style={{ backgroundColor: 'var(--purple-soft)', color: 'var(--purple)' }}>
+              Faturas a vencer
+            </div>
           </div>
         </motion.div>
 
         {/* Investimentos */}
-        {totalInvestimentos > 0 && (
-          <motion.div 
-            variants={fadeUpItem}
-            whileHover={{ y: -3, boxShadow: '0 8px 30px rgba(0,0,0,0.04)' }}
-            className="premium-card kpi-card kpi-investimentos"
-          >
-            <div className="kpi-header">
-              <span>Investido</span>
-              <div className="kpi-icon-wrapper">
-                <PiggyBank size={16} />
-              </div>
+        <motion.div 
+          variants={fadeUpItem}
+          whileHover={{ y: -3, boxShadow: '0 8px 30px rgba(0,0,0,0.04)' }}
+          className="premium-card kpi-card kpi-investimentos"
+        >
+          <div className="kpi-header">
+            <span>Investido</span>
+            <div className="kpi-icon-wrapper">
+              <PiggyBank size={16} />
             </div>
+          </div>
+          <div className="kpi-body">
             <div className="kpi-value" style={{ color: 'var(--info)' }}>
               {formatCurrency(totalInvestimentos)}
             </div>
-            
-            {/* Porcentagem que cresceu no mês */}
             {crescimentoInvestido !== 0 || totalInvestidoPrev > 0 ? (() => {
               const isPositive = crescimentoInvestido >= 0;
               return (
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.25rem', 
-                  fontSize: '0.725rem', 
-                  fontWeight: 700, 
-                  color: isPositive ? 'var(--success)' : 'var(--danger)',
-                  marginTop: '0.25rem'
+                <div className="kpi-pill" style={{ 
+                  backgroundColor: isPositive ? 'var(--success-light)' : 'var(--danger-light)', 
+                  color: isPositive ? 'var(--success)' : 'var(--danger)' 
                 }}>
                   {isPositive ? '↑' : '↓'} {isPositive ? '+' : ''}{crescimentoInvestido.toFixed(1)}% cresceu
                 </div>
               );
-            })() : null}
-          </motion.div>
-        )}
+            })() : (
+              <div className="kpi-pill" style={{ backgroundColor: 'var(--info-light)', color: 'var(--info)' }}>
+                Aplicações do mês
+              </div>
+            )}
+          </div>
+        </motion.div>
       </motion.div>
 
       {/* Dashboard Charts */}
@@ -540,15 +630,24 @@ export default function App() {
         >
           <div className="chart-title">
             <ChartColumn size={16} style={{ color: 'var(--primary)' }} />
-            Receitas vs Despesas Fixas (Evolução)
+            Receitas vs Despesas (Fixas e Variáveis)
           </div>
           <div className="chart-container-inner">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-card)" />
-                <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={11} tickLine={false} />
+                <XAxis 
+                  dataKey="name" 
+                  stroke="var(--text-secondary)" 
+                  fontSize={11} 
+                  tickLine={false}
+                  interval={0}
+                  tickFormatter={(val: string) => val.trim().slice(0, 3)}
+                />
                 <YAxis stroke="var(--text-secondary)" fontSize={11} tickLine={false} />
                 <Tooltip 
+                  formatter={(val: any) => formatCurrency(Number(val || 0))}
+                  labelFormatter={(label: any) => `Mês: ${label}`}
                   contentStyle={{ 
                     backgroundColor: 'var(--bg-card)', 
                     borderColor: 'var(--border-card)', 
@@ -557,24 +656,89 @@ export default function App() {
                     color: 'var(--text-primary)'
                   }} 
                 />
-                <Bar dataKey="Receitas" fill="var(--primary)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Despesas" fill="var(--text-muted)" radius={[4, 4, 0, 0]} />
+                <Legend 
+                  wrapperStyle={{ fontSize: '0.75rem', paddingTop: '0.5rem' }} 
+                  iconType="circle"
+                />
+                {/* Tons Pastéis Conforme Imagem de Referência */}
+                <Bar dataKey="Receitas" fill="#b3ed77" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Despesas Fixas" fill="#ff797a" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Despesas Variáveis" fill="#ffcf91" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </motion.div>
 
-        {/* Categoria Donut Chart */}
+        {/* Categoria Donut Chart com Seletor Fixas / Variáveis / Geral */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
           className="premium-card chart-section"
         >
-          <div className="chart-title">
-            <PieIcon size={16} style={{ color: 'var(--primary)' }} />
-            Categorias de Despesas Fixas
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div className="chart-title" style={{ margin: 0 }}>
+              <PieIcon size={16} style={{ color: 'var(--primary)' }} />
+              Categorias de Gastos
+            </div>
+            
+            {/* Seletor de Categoria */}
+            <div style={{ 
+              display: 'flex', 
+              gap: '2px', 
+              background: 'var(--bg-card-hover)', 
+              padding: '2px', 
+              borderRadius: '0.5rem', 
+              border: '1px solid var(--border-card)' 
+            }}>
+              <button 
+                onClick={() => setCategoryView('geral')} 
+                style={{ 
+                  background: categoryView === 'geral' ? 'var(--bg-card)' : 'transparent',
+                  color: categoryView === 'geral' ? 'var(--primary)' : 'var(--text-secondary)',
+                  border: 'none',
+                  padding: '0.2rem 0.5rem',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                Geral
+              </button>
+              <button 
+                onClick={() => setCategoryView('fixas')} 
+                style={{ 
+                  background: categoryView === 'fixas' ? 'var(--bg-card)' : 'transparent',
+                  color: categoryView === 'fixas' ? 'var(--danger)' : 'var(--text-secondary)',
+                  border: 'none',
+                  padding: '0.2rem 0.5rem',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                Fixas
+              </button>
+              <button 
+                onClick={() => setCategoryView('variaveis')} 
+                style={{ 
+                  background: categoryView === 'variaveis' ? 'var(--bg-card)' : 'transparent',
+                  color: categoryView === 'variaveis' ? 'var(--warning)' : 'var(--text-secondary)',
+                  border: 'none',
+                  padding: '0.2rem 0.5rem',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                Variáveis
+              </button>
+            </div>
           </div>
+
           <div className="chart-container-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {pieChartData.length > 0 ? (
               <div className="chart-container-horizontal">
@@ -606,7 +770,7 @@ export default function App() {
                           borderRadius: '0.875rem',
                           boxShadow: 'var(--shadow-premium)',
                           color: 'var(--text-primary)'
-                        }}
+                        }} 
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -664,20 +828,22 @@ export default function App() {
                       </div>
                       <div className="legend-row-right">
                         <span className="legend-row-value">{formatCurrency(entry.value)}</span>
-                        <span className="legend-row-percent">{Math.round((entry.value / totalDespesasFixas) * 100)}%</span>
+                        <span className="legend-row-percent">
+                          {totalBaseCategorias > 0 ? Math.round((entry.value / totalBaseCategorias) * 100) : 0}%
+                        </span>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="update-badge" style={{ margin: 'auto' }}>Nenhuma despesa fixa lançada.</div>
+              <div className="update-badge" style={{ margin: 'auto' }}>Nenhuma despesa para esta visualização.</div>
             )}
           </div>
         </motion.div>
       </div>
 
-      {/* Detalhamento das Contas (Micro-transitions ao mudar de mês) */}
+      {/* Detalhamento das Contas: Fixas e Receitas */}
       <AnimatePresence mode="wait">
         <motion.div 
           key={selectedMonth}
@@ -687,7 +853,7 @@ export default function App() {
           transition={{ duration: 0.25 }}
           className="lists-grid"
         >
-          {/* Tabela de Despesas */}
+          {/* Tabela de Despesas Fixas */}
           <div className="premium-card">
             {(() => {
               const despesasFiltradas = contasDoMes.despesas.filter(item => {
@@ -787,8 +953,8 @@ export default function App() {
                             <th>Conta</th>
                             <th>Tipo</th>
                             <th>Valor</th>
-                            <th>Status</th>
-                            <th>Banco</th>
+                            <th style={{ whiteSpace: 'nowrap' }}>Status</th>
+                            <th style={{ whiteSpace: 'nowrap' }}>Banco</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -818,7 +984,7 @@ export default function App() {
                                   })()}
                                 </td>
                                 <td style={{ fontWeight: 700 }}>{formatCurrency(item.valor)}</td>
-                                <td>
+                                <td style={{ whiteSpace: 'nowrap' }}>
                                   <span className={`badge ${isPaid ? 'badge-paid' : 'badge-pending'}`}>
                                     {isPaid ? (
                                       <><CheckCircle2 size={11} style={{ marginRight: 4 }} /> Pago</>
@@ -827,7 +993,7 @@ export default function App() {
                                     )}
                                   </span>
                                 </td>
-                                <td style={{ fontWeight: 500 }}>
+                                <td style={{ fontWeight: 500, whiteSpace: 'nowrap' }}>
                                   {item.banco ? (() => {
                                     const bankName = item.banco.trim();
                                     const colors = BANK_COLORS[bankName] || BANK_COLORS[bankName.replace(/\s+/g, '')] || { bg: 'var(--bg-card-hover)', text: 'var(--text-secondary)' };
@@ -838,7 +1004,8 @@ export default function App() {
                                           backgroundColor: colors.bg, 
                                           color: colors.text,
                                           border: '1px solid rgba(0,0,0,0.03)',
-                                          fontWeight: 700
+                                          fontWeight: 700,
+                                          whiteSpace: 'nowrap'
                                         }}
                                       >
                                         {bankName}
@@ -897,7 +1064,7 @@ export default function App() {
             <div className="table-header-row">
               <div className="table-title">
                 <ArrowDownRight size={16} style={{ color: 'var(--success)' }} />
-                Receitas
+                Receitas do Mês
               </div>
               <div className="update-badge">{contasDoMes.receitas.length} itens</div>
             </div>
@@ -928,8 +1095,161 @@ export default function App() {
                 <div className="update-badge" style={{ padding: '2rem 0', textAlign: 'center' }}>Nenhuma receita encontrada.</div>
               )}
             </div>
+
+            {contasDoMes.receitas.length > 0 && (
+              <div style={{
+                marginTop: '1.25rem',
+                paddingTop: '1rem',
+                borderTop: '1px solid var(--border-card)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                fontSize: '0.825rem'
+              }}>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Total Receitas:</span>
+                <strong style={{ color: 'var(--primary)', fontWeight: 700 }}>{formatCurrency(totalReceitas)}</strong>
+              </div>
+            )}
           </div>
         </motion.div>
+      </AnimatePresence>
+
+      {/* NOVO: Seção de Despesas Variáveis do Mês */}
+      <AnimatePresence mode="wait">
+        {contasDoMes.variaveis && contasDoMes.variaveis.length > 0 && (
+          <motion.div 
+            key={`var-${selectedMonth}`}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.25 }}
+            className="premium-card" 
+            style={{ marginTop: '2rem' }}
+          >
+            <div className="table-header-row">
+              <div className="table-title">
+                <Receipt size={16} style={{ color: 'var(--warning)' }} />
+                Despesas Variáveis (Dia a Dia)
+              </div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                {/* Campo de Busca Rápida */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  background: 'var(--bg-card-hover)',
+                  border: '1px solid var(--border-card)',
+                  borderRadius: '0.5rem',
+                  padding: '0.25rem 0.625rem',
+                  fontSize: '0.75rem'
+                }}>
+                  <Search size={13} style={{ color: 'var(--text-secondary)' }} />
+                  <input 
+                    type="text"
+                    placeholder="Filtrar lançamento..."
+                    value={searchVariavel}
+                    onChange={(e) => setSearchVariavel(e.target.value)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'var(--text-primary)',
+                      outline: 'none',
+                      fontSize: '0.75rem',
+                      width: '130px'
+                    }}
+                  />
+                </div>
+                <div className="update-badge">{variaveisFiltradas.length} itens</div>
+              </div>
+            </div>
+
+            <div className="table-container" style={{ maxHeight: '380px', overflowY: 'auto' }}>
+              <table className="premium-table">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Estabelecimento</th>
+                    <th>Categoria</th>
+                    <th className="text-right">Valor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {variaveisFiltradas.map((item, idx) => {
+                    const color = CATEGORY_COLORS[item.categoria] || '#f97316';
+                    return (
+                      <tr key={idx}>
+                        <td>{formatDisplayDate(item.dia)}</td>
+                        <td style={{ fontWeight: 600 }}>{item.estabelecimento}</td>
+                        <td>
+                          <span 
+                            className="badge badge-category"
+                            style={{ 
+                              backgroundColor: `${color}18`, 
+                              color: color, 
+                              borderColor: `${color}30`,
+                              borderWidth: '1px',
+                              borderStyle: 'solid'
+                            }}
+                          >
+                            {item.categoria}
+                          </span>
+                        </td>
+                        <td className="text-right" style={{ fontWeight: 700, color: 'var(--warning)' }}>
+                          {formatCurrency(item.valor)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Rodapé das Variáveis com Total e Resumo por Categoria */}
+            <div style={{
+              marginTop: '1.25rem',
+              paddingTop: '1rem',
+              borderTop: '1px solid var(--border-card)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              fontSize: '0.825rem'
+            }}>
+              <div>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Total de Variáveis: </span>
+                <strong style={{ color: 'var(--warning)', fontWeight: 700, fontSize: '0.95rem' }}>{formatCurrency(totalDespesasVariaveis)}</strong>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                {(() => {
+                  const agrupado: { [c: string]: number } = {};
+                  contasDoMes.variaveis.forEach(v => {
+                    agrupado[v.categoria] = (agrupado[v.categoria] || 0) + v.valor;
+                  });
+                  return Object.entries(agrupado)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3)
+                    .map(([cat, val]) => (
+                      <div 
+                        key={cat} 
+                        style={{
+                          background: 'var(--bg-card-hover)',
+                          padding: '0.2rem 0.5rem',
+                          borderRadius: '0.375rem',
+                          fontSize: '0.725rem',
+                          color: 'var(--text-secondary)',
+                          border: '1px solid var(--border-card)'
+                        }}
+                      >
+                        <strong style={{ color: CATEGORY_COLORS[cat] || 'var(--text-primary)' }}>{cat}:</strong> {formatCurrency(val)}
+                      </div>
+                    ));
+                })()}
+              </div>
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* Tabela de Investimentos (se houver no mês) */}

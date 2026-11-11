@@ -15,10 +15,11 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// Planilha única atualizada contendo Despesas Fixas, Receitas, Investimentos, Cartões e Despesas Variáveis
 const CONTAS_URL = "https://docs.google.com/spreadsheets/d/1WbTHAhdBN5PkyAkZUm6R8p8PxuDZ8V2VtGiCyUpR3RU/export?format=xlsx";
+// Planilha de cartões legada (usada como fallback para meses de Janeiro a Agosto que não têm cartões na planilha unificada)
 const CARTOES_URL = "https://docs.google.com/spreadsheets/d/1eLn_SZzyLPhg5dA5Ui58AxwTiyB4b9fGYkmbTq-yAds/export?format=xlsx";
 
-// Usando o diretório temporário do SO para evitar erros de escrita em ambientes Serverless (como Vercel)
 const CONTAS_PATH = path.join(os.tmpdir(), 'contas_2026.xlsx');
 const CARTOES_PATH = path.join(os.tmpdir(), 'cartoes_2026.xlsx');
 
@@ -72,22 +73,25 @@ function parseNumber(val) {
 function isTotalRow(val) {
   if (!val) return false;
   const str = String(val).trim().toLowerCase();
-  return str === 'total' || str === 'falta' || str === 'subtotal' || str === 'saldo' || str === 'total receitas' || str === 'total receita';
+  return str === 'total' || str === 'falta' || str === 'subtotal' || str === 'saldo' || 
+         str === 'total receitas' || str === 'total receita' || str.includes('total despesa');
 }
 
-// Parser de Contas
-function processContasFile() {
-  if (!fs.existsSync(CONTAS_PATH)) {
+// Parser completo da planilha unificada (Fixas, Receitas, Investimentos, Cartões na mesma aba e Variáveis)
+function processUnifiedFile() {
+  const filePath = fs.existsSync(CONTAS_PATH) ? CONTAS_PATH : path.join(__dirname, '..', 'contas_2026.xlsx');
+  if (!fs.existsSync(filePath)) {
     throw new Error("Arquivo de contas não encontrado localmente.");
   }
   
-  const workbook = xlsx.readFile(CONTAS_PATH, { cellDates: true });
-  const dataByMonth = {};
+  const workbook = xlsx.readFile(filePath, { cellDates: true });
+  const contasByMonth = {};
+  const cartoesByMonth = {};
 
   workbook.SheetNames.forEach(sheetName => {
     const cleanName = sheetName.trim().toLowerCase();
-    // Pular legendas e rascunhos
-    if (cleanName.includes('rascunho') || cleanName.includes('legenda')) {
+    // Pular legendas, rascunhos e resumo geral
+    if (cleanName.includes('rascunho') || cleanName.includes('legenda') || cleanName === 'resumo') {
       return;
     }
 
@@ -97,13 +101,15 @@ function processContasFile() {
     const despesas = [];
     const receitas = [];
     const investimentos = [];
+    const variaveis = [];
+    const cartoes = {};
 
-    // Ignora linha 0 (títulos) e linha 1 (cabeçalhos)
+    // 1. Processar Despesas Fixas, Receitas, Investimentos e Despesas Variáveis
     for (let i = 2; i < rows.length; i++) {
       const row = rows[i];
       if (!row) continue;
 
-      // Despesas (Colunas 0-6: VENCIMENTO, CONTA, TIPO, VALOR, PAGO, DATA, BANCO)
+      // --- Despesas Fixas (Colunas 0-6: VENCIMENTO, CONTA, TIPO, VALOR, PAGO, DATA, BANCO) ---
       const vencimento = row[0];
       const conta = row[1];
       const tipo = row[2];
@@ -130,7 +136,7 @@ function processContasFile() {
         }
       }
 
-      // Receitas (Colunas 8-10: ENTRADA, CLIENTE, VALOR)
+      // --- Receitas (Colunas 8-10: ENTRADA, CLIENTE, VALOR) ---
       const entrada = row[8];
       const cliente = row[9];
       const valorReceita = row[10];
@@ -149,7 +155,7 @@ function processContasFile() {
         }
       }
 
-      // Investimentos (Colunas 12-13: BANCO, VALOR)
+      // --- Investimentos (Colunas 12-13: BANCO, VALOR) ---
       const invBanco = row[12];
       const invValor = row[13];
 
@@ -167,103 +173,97 @@ function processContasFile() {
           }
         }
       }
+
+      // --- Despesas Variáveis (Colunas 19-22: DIA, ESTABELECIMENTO, VALOR, CATEGORIA) ---
+      const diaVar = row[19];
+      const estVar = row[20];
+      const valVar = row[21];
+      const catVar = row[22];
+
+      const numValVar = parseNumber(valVar);
+      if ((estVar !== null && estVar !== undefined || diaVar !== null && diaVar !== undefined) && numValVar > 0) {
+        const diaStr = String(diaVar || '').trim();
+        const estStr = String(estVar || '').trim();
+        const diaLower = diaStr.toLowerCase();
+        const estLower = estStr.toLowerCase();
+
+        if (!isTotalRow(diaStr) && !isTotalRow(estStr) && diaLower !== 'dia' && estLower !== 'estabelecimento') {
+          variaveis.push({
+            dia: parseDate(diaVar),
+            estabelecimento: estStr || 'Sem nome',
+            valor: numValVar,
+            categoria: catVar ? String(catVar).trim() : 'Outros'
+          });
+        }
+      }
     }
 
-    dataByMonth[sheetName.trim()] = { despesas, receitas, investimentos };
-  });
+    // 2. Processar Cartões Embutidos na mesma aba (Colunas 15-17: Parcela, Estabelecimento, Valor)
+    let currentCard = null;
+    let currentCardItems = [];
 
-  return dataByMonth;
-}
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row) continue;
 
-// Parser de Cartões
-function processCartoesFile() {
-  if (!fs.existsSync(CARTOES_PATH)) {
-    throw new Error("Arquivo de cartões não encontrado localmente.");
-  }
+      const v15 = row[15];
+      const v16 = row[16];
+      const v17 = row[17];
 
-  const workbook = xlsx.readFile(CARTOES_PATH, { cellDates: true });
-  const dataByMonth = {};
-
-  workbook.SheetNames.forEach(sheetName => {
-    const sheet = workbook.Sheets[sheetName];
-    const rows = xlsx.utils.sheet_to_json(sheet, { header: 1, defval: null });
-    
-    const cartoes = {};
-
-    function extractCartoesFromColumns(startColIdx, endColIdx) {
-      let currentCardName = null;
-      let cardItens = [];
-
-      for (let i = 0; i < rows.length; i++) {
-        const row = rows[i];
-        if (!row) continue;
-
-        const val0 = row[startColIdx];
-        const val1 = row[startColIdx + 1];
-        const val2 = row[startColIdx + 2];
-
-        // Detecta início de um novo cartão
-        if (val0 && String(val0).trim().toLowerCase().includes('cartão')) {
-          if (currentCardName && cardItens.length > 0) {
-            cartoes[currentCardName] = (cartoes[currentCardName] || []).concat(cardItens);
-          }
-          currentCardName = String(val0).trim();
-          cardItens = [];
-          i++; 
-          continue;
+      // Início de novo cartão (ex: "Cartão Fabiana C6 - Novembro 2026")
+      if (v15 && String(v15).trim().toLowerCase().includes('cartão')) {
+        if (currentCard && currentCardItems.length > 0) {
+          cartoes[currentCard] = (cartoes[currentCard] || []).concat(currentCardItems);
         }
+        currentCard = String(v15).trim();
+        currentCardItems = [];
+        continue;
+      }
 
-        // Se encontrou "Total", encerra o cartão atual
-        if (val0 && String(val0).trim().toLowerCase() === 'total') {
-          if (currentCardName && cardItens.length > 0) {
-            cartoes[currentCardName] = (cartoes[currentCardName] || []).concat(cardItens);
-          }
-          currentCardName = null;
-          cardItens = [];
-          continue;
+      // Fim do cartão ("Total")
+      if (v15 && String(v15).trim().toLowerCase() === 'total') {
+        if (currentCard && currentCardItems.length > 0) {
+          cartoes[currentCard] = (cartoes[currentCard] || []).concat(currentCardItems);
         }
+        currentCard = null;
+        currentCardItems = [];
+        continue;
+      }
 
-        if (currentCardName) {
-          if (val0 === null && val1 === null && val2 === null) {
-            if (currentCardName && cardItens.length > 0) {
-              cartoes[currentCardName] = (cartoes[currentCardName] || []).concat(cardItens);
+      // Lançamento do cartão
+      if (currentCard) {
+        if (v16 !== null || v17 !== null) {
+          const v15Str = String(v15 || '').toLowerCase();
+          const v16Str = String(v16 || '').toLowerCase();
+
+          if (v15Str !== 'parcela' && v16Str !== 'estabelecimento') {
+            let parcelaStr = '';
+            if (v15 instanceof Date) {
+              const day = String(v15.getDate()).padStart(2, '0');
+              const month = String(v15.getMonth() + 1).padStart(2, '0');
+              parcelaStr = `${day}/${month}`;
+            } else {
+              parcelaStr = v15 ? String(v15).trim() : '';
             }
-            currentCardName = null;
-            cardItens = [];
-            continue;
-          }
 
-          if (val1 !== null || val2 !== null) {
-            if (String(val0).toLowerCase() !== 'parcela' && String(val1).toLowerCase() !== 'estabelecimento') {
-              let parcelaStr = '';
-              if (val0 instanceof Date) {
-                const day = String(val0.getDate()).padStart(2, '0');
-                const month = String(val0.getMonth() + 1).padStart(2, '0');
-                parcelaStr = `${day}/${month}`;
-              } else {
-                parcelaStr = val0 ? String(val0).trim() : '';
-              }
-
-              cardItens.push({
+            const itemValor = parseNumber(v17);
+            if (itemValor > 0 || (v16 && String(v16).trim() !== '')) {
+              currentCardItems.push({
                 parcela: parcelaStr,
-                estabelecimento: val1 ? String(val1).trim() : 'Sem nome',
-                valor: parseNumber(val2)
+                estabelecimento: v16 ? String(v16).trim() : 'Sem nome',
+                valor: itemValor
               });
             }
           }
         }
       }
-
-      if (currentCardName && cardItens.length > 0) {
-        cartoes[currentCardName] = (cartoes[currentCardName] || []).concat(cardItens);
-      }
     }
 
-    // Processa esquerda e direita
-    extractCartoesFromColumns(0, 2);
-    extractCartoesFromColumns(5, 7);
+    if (currentCard && currentCardItems.length > 0) {
+      cartoes[currentCard] = (cartoes[currentCard] || []).concat(currentCardItems);
+    }
 
-    // Filtra para remover qualquer cartão Passaí (fora do orçamento do usuário)
+    // Filtra cartão Passaí (emprestado ao pai, fora do orçamento pessoal)
     const cartoesFiltrados = {};
     Object.entries(cartoes).forEach(([cardName, itens]) => {
       const nameLower = cardName.toLowerCase();
@@ -272,39 +272,162 @@ function processCartoesFile() {
       }
     });
 
-    dataByMonth[sheetName.trim()] = cartoesFiltrados;
+    const mKey = sheetName.trim();
+    contasByMonth[mKey] = { despesas, receitas, investimentos, variaveis };
+    if (Object.keys(cartoesFiltrados).length > 0) {
+      cartoesByMonth[mKey] = cartoesFiltrados;
+    }
   });
 
-  return dataByMonth;
+  return { contasByMonth, cartoesByMonth };
 }
 
-// Rota para ler e processar os dados
+// Parser de Cartões Legado (fallback para meses antigos sem cartões na planilha unificada)
+function processLegacyCartoesFile() {
+  const filePath = fs.existsSync(CARTOES_PATH) ? CARTOES_PATH : path.join(__dirname, '..', 'cartoes_2026.xlsx');
+  if (!fs.existsSync(filePath)) {
+    return {};
+  }
+
+  try {
+    const workbook = xlsx.readFile(filePath, { cellDates: true });
+    const dataByMonth = {};
+
+    workbook.SheetNames.forEach(sheetName => {
+      const sheet = workbook.Sheets[sheetName];
+      const rows = xlsx.utils.sheet_to_json(sheet, { header: 1, defval: null });
+      const cartoes = {};
+
+      function extractCartoesFromColumns(startColIdx) {
+        let currentCardName = null;
+        let cardItens = [];
+
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
+          if (!row) continue;
+
+          const val0 = row[startColIdx];
+          const val1 = row[startColIdx + 1];
+          const val2 = row[startColIdx + 2];
+
+          if (val0 && String(val0).trim().toLowerCase().includes('cartão')) {
+            if (currentCardName && cardItens.length > 0) {
+              cartoes[currentCardName] = (cartoes[currentCardName] || []).concat(cardItens);
+            }
+            currentCardName = String(val0).trim();
+            cardItens = [];
+            i++; 
+            continue;
+          }
+
+          if (val0 && String(val0).trim().toLowerCase() === 'total') {
+            if (currentCardName && cardItens.length > 0) {
+              cartoes[currentCardName] = (cartoes[currentCardName] || []).concat(cardItens);
+            }
+            currentCardName = null;
+            cardItens = [];
+            continue;
+          }
+
+          if (currentCardName) {
+            if (val0 === null && val1 === null && val2 === null) {
+              if (currentCardName && cardItens.length > 0) {
+                cartoes[currentCardName] = (cartoes[currentCardName] || []).concat(cardItens);
+              }
+              currentCardName = null;
+              cardItens = [];
+              continue;
+            }
+
+            if (val1 !== null || val2 !== null) {
+              if (String(val0).toLowerCase() !== 'parcela' && String(val1).toLowerCase() !== 'estabelecimento') {
+                let parcelaStr = '';
+                if (val0 instanceof Date) {
+                  const day = String(val0.getDate()).padStart(2, '0');
+                  const month = String(val0.getMonth() + 1).padStart(2, '0');
+                  parcelaStr = `${day}/${month}`;
+                } else {
+                  parcelaStr = val0 ? String(val0).trim() : '';
+                }
+
+                cardItens.push({
+                  parcela: parcelaStr,
+                  estabelecimento: val1 ? String(val1).trim() : 'Sem nome',
+                  valor: parseNumber(val2)
+                });
+              }
+            }
+          }
+        }
+
+        if (currentCardName && cardItens.length > 0) {
+          cartoes[currentCardName] = (cartoes[currentCardName] || []).concat(cardItens);
+        }
+      }
+
+      extractCartoesFromColumns(0);
+      extractCartoesFromColumns(5);
+
+      const cartoesFiltrados = {};
+      Object.entries(cartoes).forEach(([cardName, itens]) => {
+        const nameLower = cardName.toLowerCase();
+        if (!nameLower.includes('passaí') && !nameLower.includes('passai')) {
+          cartoesFiltrados[cardName] = itens;
+        }
+      });
+
+      dataByMonth[sheetName.trim()] = cartoesFiltrados;
+    });
+
+    return dataByMonth;
+  } catch (err) {
+    console.error("Erro ao ler cartões legado:", err);
+    return {};
+  }
+}
+
+// Rota principal para ler e processar os dados
 app.get('/api/financial-data', async (req, res) => {
   const forceRefresh = req.query.refresh === 'true';
 
   try {
     const contasExist = fs.existsSync(CONTAS_PATH);
-    const cartoesExist = fs.existsSync(CARTOES_PATH);
-    
     let downloaded = false;
 
-    // Baixa se for solicitado refresh ou se os arquivos não existirem
-    if (forceRefresh || !contasExist || !cartoesExist) {
+    // Baixa se for solicitado refresh ou se o arquivo não existir
+    if (forceRefresh || !contasExist) {
       console.log("Baixando dados atualizados do Google Sheets...");
-      await Promise.all([
-        downloadFile(CONTAS_URL, CONTAS_PATH),
-        downloadFile(CARTOES_URL, CARTOES_PATH)
-      ]);
-      downloaded = true;
+      try {
+        await downloadFile(CONTAS_URL, CONTAS_PATH);
+        downloaded = true;
+      } catch (dlErr) {
+        console.warn("Aviso ao baixar planilha principal:", dlErr.message);
+      }
+
+      try {
+        if (!fs.existsSync(CARTOES_PATH)) {
+          await downloadFile(CARTOES_URL, CARTOES_PATH);
+        }
+      } catch (cErr) {
+        console.warn("Aviso ao baixar cartões legados:", cErr.message);
+      }
     }
 
-    const contasData = processContasFile();
-    const cartoesData = processCartoesFile();
+    const { contasByMonth, cartoesByMonth } = processUnifiedFile();
+    const legacyCartoes = processLegacyCartoesFile();
+
+    // Mesclar cartões: prioriza os cartões da planilha unificada; se não houver no mês, usa os legados
+    const combinedCartoes = { ...legacyCartoes };
+    Object.entries(cartoesByMonth).forEach(([mes, cards]) => {
+      if (Object.keys(cards).length > 0) {
+        combinedCartoes[mes] = cards;
+      }
+    });
 
     // Mapear meses únicos em ordem lógica
     const allMonths = Array.from(new Set([
-      ...Object.keys(contasData),
-      ...Object.keys(cartoesData)
+      ...Object.keys(contasByMonth),
+      ...Object.keys(combinedCartoes)
     ]));
 
     // Ordenação dos meses (Janeiro a Dezembro)
@@ -320,13 +443,16 @@ app.get('/api/financial-data', async (req, res) => {
       return orderA - orderB;
     });
 
-    const mtime = fs.statSync(CONTAS_PATH).mtime;
+    let mtime = new Date();
+    if (fs.existsSync(CONTAS_PATH)) {
+      mtime = fs.statSync(CONTAS_PATH).mtime;
+    }
 
     res.json({
       success: true,
       months: allMonths,
-      contas: contasData,
-      cartoes: cartoesData,
+      contas: contasByMonth,
+      cartoes: combinedCartoes,
       lastUpdated: mtime.toISOString(),
       source: downloaded ? "google_sheets" : "local_cache"
     });
@@ -352,7 +478,7 @@ if (fs.existsSync(distPath)) {
 
 // Inicia servidor apenas se rodando fora da Vercel (onde é Serverless)
 if (!process.env.VERCEL) {
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`Servidor rodando na porta ${PORT}`);
   });
 }

@@ -1,75 +1,89 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
-/* Tema Escuro (Padrão do Supabase) */
+/* Tema Escuro */
 body.theme-dark {
-  --bg-main: #121212; /* Preto profundo Supabase */
+  --bg-main: #121212; /* Preto profundo */
   --bg-card: #1c1c1c; /* Background de cards */
   --bg-card-dark: #171717;
   --bg-card-hover: #222222;
   --border-card: #2e2e2e; /* Borda escura clássica */
-  --border-active: #3ecf8e; /* Verde Supabase */
+  --border-active: #96cd28; /* Verde Limão Vibrante da Paleta */
   
-  --text-primary: #ededed; /* Branco cinzento */
-  --text-secondary: #a1a1aa; /* Zinc-400 */
-  --text-muted: #52525b; /* Zinc-600 */
+  --text-primary: #ededed;
+  --text-secondary: #a1a1aa;
+  --text-muted: #52525b;
   
-  --primary: #3ecf8e; /* Verde Supabase */
-  --primary-hover: #24b47e;
-  --primary-light: rgba(62, 207, 142, 0.1);
+  --primary: #96cd28; /* Verde Limão da Paleta */
+  --primary-hover: #b3ed77;
+  --primary-light: rgba(150, 205, 40, 0.15);
+  --primary-lime: #b3ed77;
+  --primary-dark: #253505;
   
-  --success: #3ecf8e;
-  --success-light: rgba(62, 207, 142, 0.12);
+  --success: #96cd28;
+  --success-light: rgba(150, 205, 40, 0.15);
   
-  --danger: #ef4444;
-  --danger-light: rgba(239, 68, 68, 0.12);
+  --danger: #ff2a2a;
+  --danger-light: rgba(255, 42, 42, 0.15);
   
-  --warning: #f59e0b;
-  --warning-light: rgba(245, 158, 11, 0.12);
+  --warning: #fd7b04;
+  --warning-light: rgba(253, 123, 4, 0.15);
   
-  --info: #3b82f6;
-  --info-light: rgba(59, 130, 246, 0.12);
+  --info: #287af8;
+  --info-light: rgba(40, 122, 248, 0.15);
+  
+  --purple: #b57edc;
+  --purple-dark: #7e4ca5;
+  --purple-light: rgba(181, 126, 220, 0.18);
+  --purple-soft: rgba(219, 181, 238, 0.25);
   
   --shadow-premium: 0 4px 24px -2px rgba(0, 0, 0, 0.6);
-  --shadow-glow: 0 0 15px rgba(62, 207, 142, 0.15);
+  --shadow-glow: 0 0 15px rgba(150, 205, 40, 0.25);
   
-  --bg-radial: radial-gradient(at 0% 0%, rgba(62, 207, 142, 0.05) 0px, transparent 40%),
-               radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.02) 0px, transparent 40%);
+  --bg-radial: radial-gradient(at 0% 0%, rgba(150, 205, 40, 0.05) 0px, transparent 40%),
+               radial-gradient(at 100% 100%, rgba(40, 122, 248, 0.03) 0px, transparent 40%);
 }
 
-/* Tema Claro (Supabase Light) */
+/* Tema Claro (Inspirado 100% na referência moderna enviada) */
 body.theme-light {
-  --bg-main: #f8f9fa; /* Cinza muito claro */
+  --bg-main: #f0f2f5; /* Cinza clean acetinado da referência */
   --bg-card: #ffffff; /* Branco puro */
-  --bg-card-dark: #0f172a; /* Slate 900 para o card de destaque */
-  --bg-card-hover: #f1f5f9;
-  --border-card: #e2e8f0; /* Borda cinza suave */
-  --border-active: #15803d; /* Verde oliva da referência */
+  --bg-card-dark: #253505; /* Verde floresta escuro da paleta */
+  --bg-card-hover: #f8fafc;
+  --border-card: #e4e7ec; /* Borda sutil */
+  --border-active: #96cd28; /* Verde Limão da Paleta */
   
-  --text-primary: #0f172a; /* Slate 900 */
-  --text-secondary: #475569; /* Slate 600 */
-  --text-muted: #94a3b8; /* Slate 400 */
+  --text-primary: #0f172a; /* Slate escuro */
+  --text-secondary: #64748b; /* Slate médio */
+  --text-muted: #94a3b8;
   
-  --primary: #16a34a; /* Verde oliva escuro para legibilidade */
-  --primary-hover: #15803d;
-  --primary-light: rgba(22, 163, 74, 0.08);
+  --primary: #96cd28; /* Verde Limão vibrante da Paleta */
+  --primary-hover: #7cb518;
+  --primary-light: rgba(150, 205, 40, 0.2);
+  --primary-lime: #b3ed77;
+  --primary-dark: #253505;
   
-  --success: #16a34a;
-  --success-light: #dcfce7;
+  --success: #253505; /* Verde floresta para texto de destaque */
+  --success-light: #b3ed77; /* Fundo verde limão claro oficial */
   
-  --danger: #dc2626;
-  --danger-light: #fee2e2;
+  --danger: #d60000; /* Vermelho Puro Oficial */
+  --danger-light: #f8c6c5; /* Vermelho Suave Oficial */
   
-  --warning: #d97706;
-  --warning-light: #fef3c7;
+  --warning: #fd7b04; /* Laranja Oficial */
+  --warning-light: #ffcf91; /* Laranja Suave Oficial */
   
-  --info: #0284c7;
-  --info-light: #e0f2fe;
+  --info: #287af8; /* Azul Oficial */
+  --info-light: #9fdffa; /* Azul Suave Oficial */
+  
+  --purple: #7e4ca5; /* Roxo Oficial Escuro */
+  --purple-dark: #5c357b;
+  --purple-light: #dbb5ee; /* Roxo Suave Oficial */
+  --purple-soft: rgba(219, 181, 238, 0.45);
   
   --shadow-premium: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
-  --shadow-glow: 0 0 12px rgba(22, 163, 74, 0.1);
+  --shadow-glow: 0 0 16px rgba(150, 205, 40, 0.3);
   
-  --bg-radial: radial-gradient(at 0% 0%, rgba(22, 163, 74, 0.03) 0px, transparent 40%),
-               radial-gradient(at 100% 100%, rgba(2, 132, 199, 0.02) 0px, transparent 40%);
+  --bg-radial: radial-gradient(at 0% 0%, rgba(179, 237, 119, 0.09) 0px, transparent 45%),
+               radial-gradient(at 100% 100%, rgba(150, 205, 40, 0.04) 0px, transparent 45%);
 }
 
 * {
@@ -139,38 +153,25 @@ body {
 
 .brand-section {
   display: flex;
-  align-items: center;
-  gap: 0.875rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
 }
 
-.brand-logo {
-  background: linear-gradient(135deg, var(--primary), #24b47e);
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #121212;
-  box-shadow: 0 0 10px rgba(62, 207, 142, 0.2);
-}
-
-/* Logo cor adaptada no light mode */
-body.theme-light .brand-logo {
-  color: #ffffff;
-}
-
-.brand-title h1 {
-  font-size: 1.5rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+.brand-logo-img {
+  height: 38px;
+  width: auto;
+  max-width: 220px;
   color: var(--text-primary);
+  transition: transform 0.2s ease;
 }
 
-.brand-title p {
+.brand-subtitle {
   font-size: 0.825rem;
   color: var(--text-secondary);
   font-weight: 500;
+  margin: 0;
+  letter-spacing: -0.01em;
 }
 
 /* Controles de Ações */
@@ -178,6 +179,65 @@ body.theme-light .brand-logo {
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+/* Botão de Alternância de Tema com Alto Contraste */
+.theme-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+/* Modo Escuro: Fundo escuro com sol amarelo / branco de alto contraste no hover */
+body.theme-dark .theme-toggle-btn {
+  background: #202020;
+  border-color: #383838;
+}
+
+body.theme-dark .theme-toggle-btn .sun-icon {
+  color: #fdc51b; /* Amarelo dourado oficial */
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+body.theme-dark .theme-toggle-btn:hover {
+  background: #2c2c2c !important;
+  border-color: #fdc51b !important;
+  box-shadow: 0 0 14px rgba(253, 197, 27, 0.35) !important;
+}
+
+body.theme-dark .theme-toggle-btn:hover .sun-icon {
+  color: #ffffff !important; /* Branco brilhante com contraste absoluto contra o fundo escuro */
+  transform: rotate(20deg);
+}
+
+/* Modo Claro: Fundo claro com lua em tom escuro */
+body.theme-light .theme-toggle-btn {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+body.theme-light .theme-toggle-btn .moon-icon {
+  color: #253505; /* Verde floresta escuro */
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+body.theme-light .theme-toggle-btn:hover {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+body.theme-light .theme-toggle-btn:hover .moon-icon {
+  color: #0f172a !important;
+  transform: rotate(-15deg);
 }
 
 .btn-refresh {
@@ -188,19 +248,38 @@ body.theme-light .brand-logo {
   border: 1px solid var(--border-card);
   color: var(--text-primary);
   padding: 0.625rem 1.25rem;
-  border-radius: 0.75rem;
+  border-radius: 9999px;
   font-family: inherit;
-  font-weight: 600;
-  font-size: 0.875rem;
+  font-weight: 700;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: var(--transition-smooth);
 }
 
-.btn-refresh:hover:not(:disabled) {
-  background: var(--primary);
-  color: var(--bg-main);
-  border-color: var(--primary);
-  box-shadow: var(--shadow-glow);
+body.theme-light .btn-refresh {
+  background: #253505;
+  color: #b3ed77;
+  border-color: #253505;
+}
+
+body.theme-light .btn-refresh:hover:not(:disabled) {
+  background: #96cd28;
+  color: #253505;
+  border-color: #96cd28;
+  box-shadow: 0 4px 15px rgba(150, 205, 40, 0.35);
+}
+
+body.theme-dark .btn-refresh {
+  background: #202020;
+  color: #ededed;
+  border-color: #383838;
+}
+
+body.theme-dark .btn-refresh:hover:not(:disabled) {
+  background: #96cd28;
+  color: #253505;
+  border-color: #96cd28;
+  box-shadow: 0 0 16px rgba(150, 205, 40, 0.4);
 }
 
 .btn-refresh:disabled {
@@ -214,56 +293,107 @@ body.theme-light .brand-logo {
   font-weight: 500;
 }
 
-/* Seletor de Meses */
+/* Seletor de Meses estilo Quadro Branco / Card fechado com espaçamento uniforme */
 .months-selector {
   display: flex;
-  gap: 0.5rem;
-  overflow-x: auto;
-  padding-bottom: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 1.15rem;
+  padding: 0.5rem 0.65rem;
   margin-bottom: 2.5rem;
-  border-bottom: 1px solid var(--border-card);
+  box-shadow: var(--shadow-premium);
+  width: 100%;
 }
 
 .month-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: 1px solid transparent;
   color: var(--text-secondary);
-  padding: 0.5rem 1.125rem;
-  border-radius: 0.75rem;
+  padding: 0.55rem 0.25rem;
+  border-radius: 9999px;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: var(--transition-smooth);
   white-space: nowrap;
+  text-align: center;
 }
 
 .month-tab:hover {
   background: var(--bg-card-hover);
   color: var(--text-primary);
-  border-color: var(--border-card);
 }
 
 .month-tab.active {
-  background: var(--primary-light);
-  color: var(--primary);
-  border-color: rgba(62, 207, 142, 0.2);
-  font-weight: 700;
+  background: #b3ed77;
+  color: #253505;
+  border: 1px solid rgba(150, 205, 40, 0.5);
+  font-weight: 800;
+  box-shadow: 0 4px 14px rgba(179, 237, 119, 0.45);
+}
+
+body.theme-dark .month-tab.active {
+  background: #96cd28;
+  color: #253505;
+  border: 1px solid rgba(150, 205, 40, 0.5);
+  box-shadow: 0 0 16px rgba(150, 205, 40, 0.4);
+}
+
+@media (max-width: 900px) {
+  .months-selector {
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+  .month-tab {
+    flex: 0 0 auto;
+    padding: 0.55rem 1rem;
+  }
 }
 
 /* KPI Cards Layout */
 .kpis-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1.25rem;
   margin-bottom: 2.5rem;
+}
+
+@media (max-width: 1440px) {
+  .kpis-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .kpis-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 580px) {
+  .kpis-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .kpi-card {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 135px;
+  min-height: 155px;
+  height: auto;
+  padding: 1.25rem 1.35rem;
+  border-radius: 1.25rem;
   border: 1px solid var(--border-card);
+  position: relative;
+  overflow: hidden;
 }
 
 .kpi-header {
@@ -271,8 +401,9 @@ body.theme-light .brand-logo {
   justify-content: space-between;
   align-items: center;
   color: var(--text-secondary);
-  font-size: 0.875rem;
+  font-size: 0.825rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .kpi-icon-wrapper {
@@ -282,57 +413,99 @@ body.theme-light .brand-logo {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpi-body {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
 }
 
 .kpi-value {
-  font-size: 1.85rem;
+  font-size: 1.5rem;
   font-weight: 800;
-  margin-top: 0.75rem;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.03em;
   color: var(--text-primary);
+  line-height: 1.15;
+  white-space: nowrap;
 }
 
-/* Card Destaque (Dark no Escuro, Slate 900 no Claro) */
+.kpi-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.725rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  width: fit-content;
+  line-height: 1.2;
+}
+
+/* Card Destaque Saldo Líquido (Verde Limão Vibrante da Referência) */
 .kpi-card.kpi-saldo-destaque {
-  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(62, 207, 142, 0.08) 100%);
-  border: 1px solid rgba(62, 207, 142, 0.35);
-  box-shadow: var(--shadow-glow);
+  border: 1px solid rgba(163, 230, 53, 0.5);
+  box-shadow: 0 8px 24px -4px rgba(163, 230, 53, 0.35);
 }
 
-body.theme-dark .kpi-card.kpi-saldo-destaque {
-  background: linear-gradient(135deg, #1c1c1c 0%, #122a1f 100%);
-}
-
+/* No tema claro: SEMPRE no Verde Limão Vibrante da Paleta Oficial */
 body.theme-light .kpi-card.kpi-saldo-destaque {
-  background: var(--bg-card-dark);
-  border-color: var(--bg-card-dark);
-  color: white;
-  box-shadow: var(--shadow-premium);
+  background: linear-gradient(135deg, #b3ed77 0%, #96cd28 100%) !important;
+  border-color: rgba(150, 205, 40, 0.6) !important;
+  box-shadow: 0 10px 25px -4px rgba(150, 205, 40, 0.35) !important;
 }
 
 body.theme-light .kpi-card.kpi-saldo-destaque .kpi-header {
-  color: rgba(255, 255, 255, 0.7);
+  color: #253505 !important;
+  font-weight: 700;
 }
 
 body.theme-light .kpi-card.kpi-saldo-destaque .kpi-icon-wrapper {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: #253505 !important;
+  color: #b3ed77 !important;
+  box-shadow: 0 2px 8px rgba(37, 53, 5, 0.2);
 }
 
 body.theme-light .kpi-card.kpi-saldo-destaque .kpi-value {
-  color: white;
+  color: #253505 !important;
+  white-space: nowrap !important;
 }
 
-.kpi-card.kpi-saldo-destaque .kpi-header {
-  color: var(--primary);
+body.theme-light .kpi-card.kpi-saldo-destaque .kpi-pill {
+  background: rgba(37, 53, 5, 0.12) !important;
+  color: #253505 !important;
+  border: 1px solid rgba(37, 53, 5, 0.2) !important;
+  font-weight: 700;
 }
 
-.kpi-card.kpi-saldo-destaque .kpi-icon-wrapper {
-  background: var(--primary-light);
-  color: var(--primary);
+/* No tema escuro: Verde profundo com neon lime vibrante */
+body.theme-dark .kpi-card.kpi-saldo-destaque {
+  background: linear-gradient(135deg, #182813 0%, #0f1c0d 100%);
+  border-color: rgba(150, 205, 40, 0.4);
 }
 
-/* Cores de ícones dos KPIs normais */
+body.theme-dark .kpi-card.kpi-saldo-destaque .kpi-header {
+  color: #96cd28;
+}
+
+body.theme-dark .kpi-card.kpi-saldo-destaque .kpi-icon-wrapper {
+  background: rgba(150, 205, 40, 0.15);
+  color: #b3ed77;
+}
+
+body.theme-dark .kpi-card.kpi-saldo-destaque .kpi-value {
+  color: #b3ed77;
+}
+
+body.theme-dark .kpi-card.kpi-saldo-destaque .kpi-pill {
+  background: rgba(150, 205, 40, 0.15);
+  color: #b3ed77;
+  border: 1px solid rgba(150, 205, 40, 0.25);
+}
+
+/* Cores de ícones e pills dos KPIs */
 .kpi-receitas .kpi-icon-wrapper {
   background: var(--success-light);
   color: var(--success);
@@ -346,16 +519,26 @@ body.theme-light .kpi-card.kpi-saldo-destaque .kpi-value {
 .kpi-despesas .kpi-value { color: var(--danger); }
 
 .kpi-cartoes .kpi-icon-wrapper {
-  background: var(--warning-light);
-  color: var(--warning);
+  background: var(--purple-soft);
+  color: var(--purple);
 }
-.kpi-cartoes .kpi-value { color: var(--warning); }
+.kpi-cartoes .kpi-value { color: var(--purple); }
+.kpi-cartoes .kpi-pill {
+  background: var(--purple-soft);
+  color: var(--purple);
+}
 
 .kpi-investimentos .kpi-icon-wrapper {
   background: var(--info-light);
   color: var(--info);
 }
 .kpi-investimentos .kpi-value { color: var(--info); }
+
+.kpi-variaveis .kpi-icon-wrapper {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+.kpi-variaveis .kpi-value { color: var(--warning); }
 
 /* Dashboard Content Grid */
 .dashboard-grid {
@@ -548,10 +731,13 @@ body.theme-light .kpi-card.kpi-saldo-destaque .kpi-value {
 .badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   padding: 0.25rem 0.625rem;
   border-radius: 0.5rem;
   font-size: 0.75rem;
   font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .badge-paid {
